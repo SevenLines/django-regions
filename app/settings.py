@@ -39,7 +39,6 @@ INSTALLED_APPS = (
 
     'app',
     'regions',
-    'bootstrap3', # form prettifies
     'widget_tweaks',
 )
 
