@@ -81,7 +81,10 @@ def update(request, region_id):
     if form:
         return render(request, "regions/update.html", {
             'form': form,
-            'region': region
+            'region': region,
+            # TODO this is evil hack and should be fixed
+            'north_east': form.cleaned_data['north_east'] if hasattr(form, 'cleaned_data') else region.north_east,
+            'south_west': form.cleaned_data['south_west'] if hasattr(form, 'cleaned_data') else region.south_west,
         })
     else:
         return HttpResponseBadRequest()

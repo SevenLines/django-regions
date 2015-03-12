@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load bootstrap3 widget_tweaks %}
+{% load widget_tweaks %}
 {% block content %}
     <form action="{% url "regions.views.update" region.id %}" method="post" style="padding-top: 0.5en">
         {% csrf_token %}
@@ -21,7 +21,6 @@
     <div class="clearfix"></div>
     <div id="map-canvas" style="width: 100%; height: 400px;">
     </div>
-
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
     <script>
 
@@ -70,8 +69,8 @@
                 map.setCenter(latlng);
 
                 var bounds = new google.maps.LatLngBounds(
-                        new google.maps.LatLng({{ form.south_west.value.y }}, {{ form.south_west.value.x }}),
-                        new google.maps.LatLng({{ form.north_east.value.y }}, {{ form.north_east.value.x }})
+                        new google.maps.LatLng({{ south_west.y }}, {{ south_west.x }}),
+                        new google.maps.LatLng({{ north_east.y }}, {{ north_east.x }})
                 );
 
                 rectangle.setBounds(bounds);
