@@ -2,7 +2,7 @@ from django.contrib.gis.geos import Point
 from django.core.serializers import serialize
 from django.core.urlresolvers import reverse
 from django.http.response import HttpResponseBadRequest, HttpResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 
 # Create your views here.
 from regions.forms import RegionForm
@@ -23,7 +23,12 @@ def index(request):
     request.session['lat'] = lat
     request.session['lng'] = lng
 
-    regions = Region.objects.filter(polygon__contains=Point(float(lng), float(lat)))
+
+    regions = Region.objects.all()
+    # if `global` parameter not in request we filter regions
+    if 'global' not in request.GET:
+        regions = regions.filter(polygon__contains=Point(float(lng), float(lat)))
+
     return render(request, "regions/index.html", {
         'regions': regions,
         'lat': lat,
@@ -52,6 +57,31 @@ def add(request):
     if form:
         return render(request, "regions/add.html", {
             'form': form
+        })
+    else:
+        return HttpResponseBadRequest()
+
+def update(request, region_id):
+    """
+    updates region with region_id
+    """
+    region = get_object_or_404(Region, pk=region_id)
+    form = None
+    if request.method == "POST":
+        form = RegionForm(request.POST, instance=region)
+        if form.is_valid():
+            new_region = form.save()
+            if not request.is_ajax():
+                return redirect(reverse("regions.views.index"))
+            else:
+                return HttpResponse(serialize('json', new_region), content_type='json')
+    elif request.method == "GET":
+        form = RegionForm(instance=region)
+
+    if form:
+        return render(request, "regions/update.html", {
+            'form': form,
+            'region': region
         })
     else:
         return HttpResponseBadRequest()

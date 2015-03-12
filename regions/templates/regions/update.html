@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% load bootstrap3 widget_tweaks %}
 {% block content %}
-    <form action="{% url "regions.views.add" %}" method="post">
+    <form action="{% url "regions.views.update" region.id %}" method="post" style="padding-top: 0.5en">
         {% csrf_token %}
         <div class="input-group">
-            {% render_field form.name placeholder=form.name.label class="form-control"%}
+            {% render_field form.name placeholder=form.name.label class="form-control" %}
             <div class="input-group-btn">
-                <button type="submit" class="btn btn-default pull-right">Add</button>
+                <button type="submit" class="btn btn-default pull-right">Save</button>
 
             </div>
         </div>
@@ -64,14 +64,14 @@
                 $("#polygon").html(value);
             });
 
-            // define init user position as and move map there
+            {#            // define init user position as and move map there#}
             navigator.geolocation.getCurrentPosition(function (position) {
                 var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
                 map.setCenter(latlng);
 
                 var bounds = new google.maps.LatLngBounds(
-                        new google.maps.LatLng(position.coords.latitude - 0.1, position.coords.longitude - 0.1),
-                        new google.maps.LatLng(position.coords.latitude + 0.1, position.coords.longitude + 0.1)
+                        new google.maps.LatLng({{ form.south_west.value.y }}, {{ form.south_west.value.x }}),
+                        new google.maps.LatLng({{ form.north_east.value.y }}, {{ form.north_east.value.x }})
                 );
 
                 rectangle.setBounds(bounds);
