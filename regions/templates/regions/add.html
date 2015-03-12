@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load bootstrap3 widget_tweaks %}
+{% load widget_tweaks %}
 {% block content %}
     <form action="{% url "regions.views.add" %}" method="post">
         {% csrf_token %}
