@@ -26,8 +26,7 @@
 
         function initialize() {
             var mapOptions = {
-                zoom: 9,
-                center: new google.maps.LatLng(-34.397, 150.644)
+                zoom: 9
             };
             var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
 
@@ -68,10 +67,19 @@
                 var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
                 map.setCenter(latlng);
 
-                var bounds = new google.maps.LatLngBounds(
-                        new google.maps.LatLng({{ south_west.y }}, {{ south_west.x }}),
-                        new google.maps.LatLng({{ north_east.y }}, {{ north_east.x }})
-                );
+                var bounds;
+                {% if north_east and south_west %}
+                    bounds = new google.maps.LatLngBounds(
+                            new google.maps.LatLng({{ south_west.y }}, {{ south_west.x }}),
+                            new google.maps.LatLng({{ north_east.y }}, {{ north_east.x }})
+                    );
+                {% else %}
+                    bounds = new google.maps.LatLngBounds(
+                            new google.maps.LatLng(position.coords.latitude - 0.1, position.coords.longitude - 0.1),
+                            new google.maps.LatLng(position.coords.latitude + 0.1, position.coords.longitude + 0.1)
+                    );
+                {% endif %}
+                map.setCenter(bounds.getCenter());
 
                 rectangle.setBounds(bounds);
             });

@@ -23,7 +23,6 @@ def index(request):
     request.session['lat'] = lat
     request.session['lng'] = lng
 
-
     regions = Region.objects.all()
     # if `global` parameter not in request we filter regions
     if 'global' not in request.GET:
@@ -56,7 +55,9 @@ def add(request):
 
     if form:
         return render(request, "regions/add.html", {
-            'form': form
+            'form': form,
+            'north_east': form.cleaned_data['north_east'] if hasattr(form, 'cleaned_data') else None,
+            'south_west': form.cleaned_data['south_west'] if hasattr(form, 'cleaned_data') else None,
         })
     else:
         return HttpResponseBadRequest()
