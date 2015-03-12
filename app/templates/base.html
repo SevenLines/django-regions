@@ -1,0 +1,29 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <script src="{% static "vendor/jquery/dist/jquery.min.js" %}"></script>
+    <script src="{% static "vendor/bootstrap/dist/js/bootstrap.js" %}"></script>
+    <link rel="stylesheet" href="{% static "vendor/bootstrap/dist/css/bootstrap.css" %}"/>
+    <title></title>
+</head>
+<body>
+
+<div class="container">
+    <div class="navbar">
+        <a class="navbar-brand" href="#"></a>
+        <ul class="nav navbar-nav">
+            <li class="active">
+                <a href="{% url "regions.views.index" %}">Show all regions</a>
+            </li>
+            <li>
+                <a href="{% url "regions.views.add" %}">Add region</a>
+            </li>
+        </ul>
+    </div>
+    {% block content %}
+    {% endblock %}
+</div>
+</body>
+</html>

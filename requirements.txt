@@ -1,0 +1,4 @@
+Django==1.7.6
+mysql-python
+django-bootstrap3
+django-widget-tweaks
