@@ -45,8 +45,19 @@ def index(request):
 
     # if `global` parameter not in request we filter regions
     if 'global' not in request.GET:
+        # filter by bounding box using spatial index
         regions = regions.filter(polygon__contains=Point(float(lng), float(lat)))
-        print regions.query
+        ids = list([region.pk for region in regions])
+
+        # filter circles
+        circles_filter_query = """
+SELECT id
+FROM regions_region
+WHERE haversine(y(center), x(center), %s, %s) * 1000 < radius and id in %s;
+        """
+        regions = Region.objects.raw(circles_filter_query, [lat, lng, ids])
+        ids = list([region.pk for region in regions])
+        regions = Region.objects.filter(id__in=ids)
 
     page = request.GET.get("page")
     paginator = Paginator(regions, 1000)
