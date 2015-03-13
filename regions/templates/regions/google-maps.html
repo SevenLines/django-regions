@@ -1,4 +1,3 @@
-
 <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
 <script>
 
@@ -45,11 +44,13 @@
             circle.setVisible(false);
         {% endif %}
 
-        var marker = new google.maps.Marker({
-            map: map,
-            title: 'You are there!'
-        });
-
+        {% if lat and lng %}
+            var marker = new google.maps.Marker({
+                map: map,
+                title: 'You are there!',
+                position: new google.maps.LatLng({{lat}}, {{lng}})
+            });
+        {% endif %}
 
         /**
          * recalculate form parameters
@@ -148,7 +149,6 @@
                 );
             {% endif %}
             map.setCenter(bounds.getCenter());
-            marker.setPosition(bounds.getCenter());
 
             rectangle.setBounds(bounds);
         });

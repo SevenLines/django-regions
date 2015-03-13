@@ -41,9 +41,18 @@
             };
             var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
 
+            {% if lat and lng %}
+                // set marker on current user location
+                var marker = new google.maps.Marker({
+                    map: map,
+                    title: 'You are there!',
+                    position: new google.maps.LatLng({{lat}}, {{lng}})
+                });
+            {% endif %}
+
             {% for region in regions %}
                 {% if region.is_circle %}
-                    var rect = new google.maps.Circle({
+                    var circle = new google.maps.Circle({
                         map: map,
                         center: new google.maps.LatLng({{region.center.y}}, {{region.center.x}}),
                         radius: {{ region.radius }}

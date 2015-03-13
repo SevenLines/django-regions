@@ -9,6 +9,23 @@ from regions.forms import RegionForm
 from regions.models import Region
 
 
+def _add_session_lat_lng(request, context):
+    """
+    THIS IS NOT VIEW
+    this is helper method
+    adds lat and lng values from session to context
+    and returns this context
+    :param request:
+    :param dict:
+    :rtype: dict
+    """
+    context.update({
+        'lat': request.session.get('lat', None),
+        'lng': request.session.get('lng', None),
+    })
+    return context
+
+
 def index(request):
     lat = request.GET.get('lat', None)
     lng = request.GET.get('lng', None)
@@ -28,11 +45,9 @@ def index(request):
     if 'global' not in request.GET:
         regions = regions.filter(polygon__contains=Point(float(lng), float(lat)))
 
-    return render(request, "regions/index.html", {
+    return render(request, "regions/index.html", _add_session_lat_lng(request, {
         'regions': regions,
-        'lat': lat,
-        'lng': lng
-    })
+    }))
 
 
 def add(request):
@@ -54,11 +69,11 @@ def add(request):
         form = RegionForm()
 
     if form:
-        return render(request, "regions/add.html", {
+        return render(request, "regions/add.html", _add_session_lat_lng(request, {
             'form': form,
             'north_east': form.cleaned_data['north_east'] if hasattr(form, 'cleaned_data') else None,
             'south_west': form.cleaned_data['south_west'] if hasattr(form, 'cleaned_data') else None,
-        })
+        }))
     else:
         return HttpResponseBadRequest()
 
@@ -81,12 +96,12 @@ def update(request, region_id):
         form = RegionForm(instance=region)
 
     if form:
-        return render(request, "regions/update.html", {
+        return render(request, "regions/update.html", _add_session_lat_lng(request, {
             'form': form,
             'region': region,
             # TODO this is evil hack and should be fixed
             'north_east': form.cleaned_data['north_east'] if hasattr(form, 'cleaned_data') else region.north_east,
             'south_west': form.cleaned_data['south_west'] if hasattr(form, 'cleaned_data') else region.south_west,
-        })
+        }))
     else:
         return HttpResponseBadRequest()
