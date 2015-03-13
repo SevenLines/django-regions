@@ -1,4 +1,5 @@
 from django.contrib.gis.geos import Point
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.core.serializers import serialize
 from django.core.urlresolvers import reverse
 from django.http.response import HttpResponseBadRequest, HttpResponse
@@ -41,9 +42,19 @@ def index(request):
     request.session['lng'] = lng
 
     regions = Region.objects.all()
+
     # if `global` parameter not in request we filter regions
     if 'global' not in request.GET:
         regions = regions.filter(polygon__contains=Point(float(lng), float(lat)))
+
+    page = request.GET.get("page")
+    paginator = Paginator(regions, 1000)
+    try:
+        regions = paginator.page(page)
+    except PageNotAnInteger:
+        regions = paginator.page(1)
+    except EmptyPage:
+        regions = paginator.page(paginator.num_pages)
 
     return render(request, "regions/index.html", _add_session_lat_lng(request, {
         'regions': regions,

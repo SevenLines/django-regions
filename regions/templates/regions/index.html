@@ -5,11 +5,13 @@
             <a class="btn btn-default" href="{% url "regions.views.index" %}?global=true">Show all regions</a>
 
         </div>
-        <div class="col-md-10">
+        <div class="col-md-10" hidden>
             {% if regions %}
                 {% for region in regions %}
-                    <a class="btn btn-default" id="region_update_{{ region.pk }}" href="{% url "regions.views.update" region.id %}">update
-                        `{{ region.name }}`</a>
+                    <a class="btn btn-default" id="region_update_{{ region.pk }}"
+                       href="{% url "regions.views.update" region.id %}">
+                        {{ region.name }}
+                    </a>
                 {% endfor %}
             {% endif %}
         </div>
@@ -18,22 +20,8 @@
     <div id="map-canvas" style="width: 100%; height: 600px;">
     </div>
 
-
-
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
     <script>
-        function getUrlParameter(sParam) {
-            var sPageURL = window.location.search.substring(1);
-            var sURLVariables = sPageURL.split('&');
-            for (var i = 0; i < sURLVariables.length; i++) {
-                var sParameterName = sURLVariables[i].split('=');
-                if (sParameterName[0] == sParam) {
-                    return sParameterName[1];
-                }
-            }
-        }
-
-
         function initialize() {
             var mapOptions = {
                 zoom: 9,
@@ -71,14 +59,17 @@
                     label: '{{ region.name }}'
                 });
                 google.maps.event.addListener(region, 'mouseover', function (event) {
-                    $('#region_update_{{ region.pk }}').addClass("active");
+                    // add highlighting
+                    <!--$('#region_update_{{ region.pk }}').addClass("active");-->
                     this.setOptions({fillColor: 'red'});
                 });
                 google.maps.event.addListener(region, 'mouseout', function () {
-                    $('#region_update_{{ region.pk }}').removeClass("active");
+                    // remove highlightin
+                    <!--$('#region_update_{{ region.pk }}').removeClass("active");-->
                     this.setOptions({fillColor: 'black'});
                 });
                 google.maps.event.addListener(region, 'click', function () {
+                    // redirect to update region page on click
                     var region_button = $('#region_update_{{ region.pk }}');
                     window.location = region_button.attr('href')
                 });
