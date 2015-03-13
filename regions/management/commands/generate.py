@@ -16,7 +16,7 @@ class Command(BaseCommand):
         count = 100000
         for i in xrange(count):
             lradius = random.uniform(0.1, 0.8)
-            lat = random.uniform(5, 85)
+            lat = random.uniform(-85, 85)
             lng = random.uniform(-175, 175)
 
             north_east = Point(lng + lradius, lat - lradius)
