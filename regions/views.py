@@ -62,6 +62,7 @@ def add(request):
     else:
         return HttpResponseBadRequest()
 
+
 def update(request, region_id):
     """
     updates region with region_id

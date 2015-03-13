@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load widget_tweaks %}
 {% block content %}
-    <form action="{% url "regions.views.add" %}" method="post">
+    <form action="{% url "regions.views.add" %}" method="post" name="mapForm">
         {% csrf_token %}
         <div class="input-group">
             {% render_field form.name placeholder=form.name.label class="form-control" %}
@@ -16,7 +16,15 @@
         <textarea hidden name="south_west" id="south_west" cols="30" rows="10">
             {{ form.south_west.value }}</textarea>
         <textarea hidden name="polygon" id="polygon" cols="30" rows="10">{{ form.polygon.value }}</textarea>
+        <textarea hidden name="center" id="center" cols="30" rows="10">{{ form.center.value }}</textarea>
+        <input type="text" name="radius" value="{{ form.radius.value }}" id="radius" hidden/>
 
+        <label class="checkbox-inline">
+            <input type="radio" name="editType" value="rectangle" checked> Rectangle
+        </label>
+        <label class="checkbox-inline">
+            <input type="radio" name="editType" value="circle"> Circle
+        </label>
     </form>
     <div class="clearfix"></div>
     <div id="map-canvas" style="width: 100%; height: 400px;">
@@ -24,6 +32,24 @@
 
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
     <script>
+
+        function getDistanceInMeters(lat1, lon1, lat2, lon2) {
+            var R = 6371; // Radius dof the earth in mi
+            var dLat = deg2rad(lat2 - lat1);  // deg2rad below
+            var dLon = deg2rad(lon2 - lon1);
+            var a =
+                            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                            Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+                            Math.sin(dLon / 2) * Math.sin(dLon / 2)
+                    ;
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            var d = R * c * 1000; // Distance in m
+            return d;
+        }
+
+        function deg2rad(deg) {
+            return deg * (Math.PI / 180)
+        }
 
         function initialize() {
             var mapOptions = {
@@ -38,9 +64,27 @@
                 map: map
             });
 
-            // listener for region bounds changing
-            google.maps.event.addListener(rectangle, 'bounds_changed', function () {
-                var bounds = rectangle.getBounds();
+            // init region
+            var circle = new google.maps.Circle({
+                editable: true,
+                draggable: true,
+                map: map
+            });
+            circle.setVisible(false);
+
+            var marker = new google.maps.Marker({
+                map: map,
+                title: 'You are there!'
+            });
+
+
+            /**
+             * recalculate form parameters
+             * @param bounds the new object bounds
+             * @returns {radius: Number}
+             */
+            function setFormParameters(bounds) {
+
                 var north_east = bounds.getNorthEast();
                 var south_west = bounds.getSouthWest();
 
@@ -52,6 +96,17 @@
                 value = ['POINT (', south_west.lng(), ' ', south_west.lat(), ')'].join('');
                 $("#south_west").html(value);
 
+                // set center point
+                var center = bounds.getCenter();
+                value = ['POINT (', center.lng(), ' ', center.lat(), ')'].join('');
+                $("#center").html(value);
+
+                // calculate radius in mi
+                var lng_distance = getDistanceInMeters(north_east.lat(), center.lng(), center.lat(), center.lng())
+                var lat_distance = getDistanceInMeters(center.lat(), north_east.lng(), center.lat(), center.lng())
+                var radius = parseFloat(Math.min(lng_distance, lat_distance));
+                document.forms['mapForm'].radius.value = radius;
+
                 // generate POLYGON path
                 value = ['POLYGON ((',
                     north_east.lng(), north_east.lat(), ',',
@@ -61,29 +116,84 @@
                     north_east.lng(), north_east.lat(),
                     '))'].join(' ');
                 $("#polygon").html(value);
-            });
+
+                return {
+                    radius: radius
+                }
+            }
+
+            var boundsChangedFlag = false; // for prevent recursive calls
+            function rectangle_bounds_changed(event) {
+                if (boundsChangedFlag)
+                    return;
+
+                boundsChangedFlag = true;
+
+
+                var bounds = rectangle.getBounds();
+                var out = setFormParameters(bounds);
+
+                circle.setCenter(bounds.getCenter());
+                circle.setRadius(out.radius);
+
+                boundsChangedFlag = false;
+            }
+
+            function circle_bounds_changed(event) {
+                if (boundsChangedFlag)
+                    return;
+
+                boundsChangedFlag = true;
+
+                var bounds = circle.getBounds();
+                setFormParameters(bounds);
+                rectangle.setBounds(bounds);
+
+                boundsChangedFlag = false;
+            }
+
+            // listener for region bounds changing
+            google.maps.event.addListener(rectangle, 'bounds_changed', rectangle_bounds_changed);
+            google.maps.event.addListener(circle, 'bounds_changed', circle_bounds_changed);
 
             // define init user position as and move map there
             navigator.geolocation.getCurrentPosition(function (position) {
-                var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-                map.setCenter(latlng);
-
                 var bounds;
+                // define map center
                 {% if north_east and south_west %}
+                    {# there we use session values #}
                     bounds = new google.maps.LatLngBounds(
                             new google.maps.LatLng({{ south_west.y }}, {{ south_west.x }}),
                             new google.maps.LatLng({{ north_east.y }}, {{ north_east.x }})
                     );
                 {% else %}
+                    {# but if they are not present, get javascript navigator values #}
+                    var rect_size = 0.1;
                     bounds = new google.maps.LatLngBounds(
-                            new google.maps.LatLng(position.coords.latitude - 0.1, position.coords.longitude - 0.1),
-                            new google.maps.LatLng(position.coords.latitude + 0.1, position.coords.longitude + 0.1)
+                            new google.maps.LatLng(position.coords.latitude - rect_size, position.coords.longitude - rect_size),
+                            new google.maps.LatLng(position.coords.latitude + rect_size, position.coords.longitude + rect_size)
                     );
                 {% endif %}
                 map.setCenter(bounds.getCenter());
+                marker.setPosition(bounds.getCenter());
 
                 rectangle.setBounds(bounds);
             });
+
+            $(document.forms['mapForm'].editType).on('change', function () {
+                var editType = document.forms['mapForm'].editType.value;
+                console.log(editType);
+                switch (editType) {
+                    case 'rectangle':
+                        rectangle.setVisible(true);
+                        circle.setVisible(false);
+                        break;
+                    case 'circle':
+                        rectangle.setVisible(false);
+                        circle.setVisible(true);
+                        break;
+                }
+            })
 
         }
 
