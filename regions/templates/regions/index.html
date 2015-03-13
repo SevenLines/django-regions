@@ -8,7 +8,7 @@
         <div class="col-md-10">
             {% if regions %}
                 {% for region in regions %}
-                    <a class="btn btn-default" href="{% url "regions.views.update" region.id %}">update
+                    <a class="btn btn-default" id="region_update_{{ region.pk }}" href="{% url "regions.views.update" region.id %}">update
                         `{{ region.name }}`</a>
                 {% endfor %}
             {% endif %}
@@ -50,15 +50,16 @@
                 });
             {% endif %}
 
+            var region;
             {% for region in regions %}
                 {% if region.is_circle %}
-                    var circle = new google.maps.Circle({
+                    region = new google.maps.Circle({
                         map: map,
                         center: new google.maps.LatLng({{region.center.y}}, {{region.center.x}}),
                         radius: {{ region.radius }}
                     });
                 {% else %}
-                    var rect = new google.maps.Rectangle({
+                    region = new google.maps.Rectangle({
                         map: map,
                         bounds: new google.maps.LatLngBounds(
                                 new google.maps.LatLng({{region.south_west.y}}, {{region.south_west.x}}),
@@ -66,6 +67,21 @@
                         )
                     });
                 {% endif %}
+                region.setOptions({
+                    label: '{{ region.name }}'
+                });
+                google.maps.event.addListener(region, 'mouseover', function (event) {
+                    $('#region_update_{{ region.pk }}').addClass("active");
+                    this.setOptions({fillColor: 'red'});
+                });
+                google.maps.event.addListener(region, 'mouseout', function () {
+                    $('#region_update_{{ region.pk }}').removeClass("active");
+                    this.setOptions({fillColor: 'black'});
+                });
+                google.maps.event.addListener(region, 'click', function () {
+                    var region_button = $('#region_update_{{ region.pk }}');
+                    window.location = region_button.attr('href')
+                });
             {% endfor %}
 
             // define init user position as and move map there
