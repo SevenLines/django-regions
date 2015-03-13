@@ -46,6 +46,7 @@ def index(request):
     # if `global` parameter not in request we filter regions
     if 'global' not in request.GET:
         regions = regions.filter(polygon__contains=Point(float(lng), float(lat)))
+        print regions.query
 
     page = request.GET.get("page")
     paginator = Paginator(regions, 1000)

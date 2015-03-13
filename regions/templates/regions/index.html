@@ -60,12 +60,10 @@
                 });
                 google.maps.event.addListener(region, 'mouseover', function (event) {
                     // add highlighting
-                    <!--$('#region_update_{{ region.pk }}').addClass("active");-->
                     this.setOptions({fillColor: 'red'});
                 });
                 google.maps.event.addListener(region, 'mouseout', function () {
                     // remove highlightin
-                    <!--$('#region_update_{{ region.pk }}').removeClass("active");-->
                     this.setOptions({fillColor: 'black'});
                 });
                 google.maps.event.addListener(region, 'click', function () {

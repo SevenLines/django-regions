@@ -1,3 +1,4 @@
 Django==1.7.6
 mysql-python
 django-widget-tweaks
+sqlparse
