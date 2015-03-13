@@ -54,7 +54,7 @@ def index(request):
 SELECT id
 FROM regions_region
 WHERE MBRContains(polygon, GeomFromText(AsText(POINT (%s, %s))))
-      and haversine(y(center), x(center), %s, %s) * 1000 < radius;
+      and (not is_circle or (is_circle and (haversine(y(center), x(center), %s, %s) * 1000 < radius)));
         """
         regions = Region.objects.raw(query, [float(lng), float(lat), float(lat), float(lng)])
         ids = list([region.pk for region in regions])
