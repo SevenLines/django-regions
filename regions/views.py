@@ -45,17 +45,18 @@ def index(request):
 
     # if `global` parameter not in request we filter regions
     if 'global' not in request.GET:
-        # filter by bounding box using spatial index
-        regions = regions.filter(polygon__contains=Point(float(lng), float(lat)))
-        ids = list([region.pk for region in regions])
+        # # filter by bounding box using spatial index
+        # regions = regions.filter(polygon__contains=Point(float(lng), float(lat)))
+        # ids = list([region.pk for region in regions])
 
         # filter circles
-        circles_filter_query = """
+        query = """
 SELECT id
 FROM regions_region
-WHERE haversine(y(center), x(center), %s, %s) * 1000 < radius and id in %s;
+WHERE MBRContains(polygon, GeomFromText(AsText(POINT (%s, %s))))
+      and haversine(y(center), x(center), %s, %s) * 1000 < radius;
         """
-        regions = Region.objects.raw(circles_filter_query, [lat, lng, ids])
+        regions = Region.objects.raw(query, [float(lng), float(lat), float(lat), float(lng)])
         ids = list([region.pk for region in regions])
         regions = Region.objects.filter(id__in=ids)
 
